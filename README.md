@@ -14,6 +14,22 @@
 
 ## 安装
 
+### 方式一：Skill 一键安装（推荐）
+
+朋友只需对他的 Hermes 说：
+
+> **安装桌面头像**
+
+Hermes 会自动加载 skill 并完成安装。前提是已安装本 skill：
+
+```bash
+hermes skills install https://github.com/WeilaiSun/hermes-desktop-avatars
+```
+
+然后对他的 Hermes 说 **"安装桌面头像"**，Hermes 自动 patch + build。
+
+### 方式二：手动脚本
+
 ```bash
 # 1. 进入 Hermes 源码目录
 cd hermes-agent
