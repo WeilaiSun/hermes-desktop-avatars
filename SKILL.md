@@ -1,7 +1,7 @@
 ---
 name: install-desktop-avatars
 description: "Install desktop message avatars — circular avatars with editable names/images for the Hermes Electron desktop app."
-version: 1.0.0
+version: 1.1.0
 author: WeilaiSun
 license: MIT
 triggers:
@@ -20,83 +20,57 @@ triggers:
 
 ## 安装步骤
 
-### 1. 复制新文件
+### 1. 运行安装脚本
 
-从本 skill 的 `new-files/` 目录复制 3 个新文件到 hermes-agent 源码对应位置：
-
-```bash
-# 假设 hermes-agent 根目录为 $HERMES_HOME/hermes-agent/
-SKILL_DIR=$(dirname 当前 skill 的 SKILL.md 路径)
-
-cp $SKILL_DIR/new-files/apps/desktop/src/store/avatar.ts \
-   $HERMES_HOME/hermes-agent/apps/desktop/src/store/avatar.ts
-
-cp $SKILL_DIR/new-files/apps/desktop/src/components/chat/message-avatar.tsx \
-   $HERMES_HOME/hermes-agent/apps/desktop/src/components/chat/message-avatar.tsx
-
-cp $SKILL_DIR/new-files/apps/desktop/src/components/chat/avatar-editor-dialog.tsx \
-   $HERMES_HOME/hermes-agent/apps/desktop/src/components/chat/avatar-editor-dialog.tsx
-```
-
-### 2. 修改现有文件
-
-对以下 4 个文件做精确替换（用 patch 工具）。每个文件的改动内容详见本 skill 的 `patches/` 目录。
-
-先定位 hermes-agent 根目录：
-```bash
-HERMES_ROOT=$(查找 apps/desktop/package.json 所在的目录)
-```
-
-然后对每个文件执行 patch：
-
-**styles.css** — 在文件末尾 `@media (prefers-reduced-motion: reduce)` 块之后追加：
-```css
-/* Message avatars */
-.message-avatar { border-radius: 9999px; overflow: hidden; }
-.avatar-fallback-ring { box-shadow: 0 0 0 1px var(--ui-stroke-tertiary, rgba(255,255,255,0.1)); }
-.message-avatar-editable:focus-visible { outline: 2px solid var(--dt-midground, var(--dt-primary)); outline-offset: 2px; }
-[data-slot="message-row"] .message-name-label { opacity: 0; transition: opacity 120ms ease; }
-[data-slot="message-row"]:hover .message-name-label,
-[data-slot="message-row"]:focus-within .message-name-label { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .message-name-label { transition: none; } }
-```
-
-**user-message.tsx** — 导入修改 + 包裹返回值为 flex 行：
-- 添加 import: `{ useStore } from '@nanostores/react'`, `{ MessageAvatar } from '@/components/chat/message-avatar'`, `{ $avatarNames, DEFAULT_NAMES } from '@/store/avatar'`
-- 在 `useResizeObserver` 之后添加: `const userName = useStore($avatarNames).user || DEFAULT_NAMES.user`
-- 包裹 `StickyHumanMessageContainer` 为：
-```tsx
-<div className="message-row ..." data-slot="message-row">
-  <div className="flex min-w-0 flex-1 flex-col items-end">
-    <span className="message-name-label ...">{userName}</span>
-    <StickyHumanMessageContainer ...>
-      ...
-    </StickyHumanMessageContainer>
-  </div>
-  <MessageAvatar clickToEdit role="user" />
-</div>
-```
-
-**assistant-message.tsx** — 同上理：
-- 将 `useStore` 重命名为 `useNanostore`
-- 添加 import: `{ MessageAvatar }`, `{ $avatarNames, DEFAULT_NAMES }`
-- 添加 `assistantName` 变量
-- 包裹 `MessagePrimitive.Root` 为 flex 行，头像在左
-
-**thread/index.tsx** — 渲染对话框：
-- 添加 import: `{ useStore }`, `{ AvatarEditorDialog }`, `{ $avatarEditorOpen, closeAvatarEditor }`
-- 在 return 中添加 `<AvatarEditorDialog onClose={closeAvatarEditor} open={avatarEditorOpen} />`
-
-### 3. 重建桌面端
+在 hermes-agent 仓库根目录执行：
 
 ```bash
-cd $HERMES_ROOT/apps/desktop
-npm run build
+python path/to/install-avatars.py
 ```
 
-### 4. 提示用户重启
+脚本会自动完成以下操作：
 
-告诉用户：关闭并重新打开 Hermes 桌面端即可看到头像效果。点击任意头像可编辑名称和图片。
+### 2. 复制新文件
+
+新增 3 个文件到 hermes-agent 源码对应位置：
+
+| 源路径 (本 skill) | 目标路径 |
+|---|---|
+| `new-files/apps/desktop/src/store/avatar.ts` | `apps/desktop/src/store/avatar.ts` |
+| `new-files/apps/desktop/src/components/chat/message-avatar.tsx` | `apps/desktop/src/components/chat/message-avatar.tsx` |
+| `new-files/apps/desktop/src/components/chat/avatar-editor-dialog.tsx` | `apps/desktop/src/components/chat/avatar-editor-dialog.tsx` |
+
+### 3. 修改现有文件
+
+对 5 个文件做精确替换：
+
+| 文件 | 改动 |
+|---|---|
+| `user-message.tsx` | 导入 MessageAvatar + avatar store → 包裹返回值为 avatar 行 |
+| `assistant-message.tsx` | 同上，头像在左 |
+| `thread/index.tsx` | 渲染 AvatarEditorDialog |
+| `styles.css` | 追加 avatar CSS（含 z-index: 50 防遮挡） |
+| `avatar-editor-dialog.tsx` | 替换 ✕ 关闭逻辑（原生 button 直接回调） |
+
+### 4. 重建 + 打包
+
+- `npm install --prefer-offline` → 装依赖
+- `npm run build` → 构建前端
+- 如果检测到打包版（有 `release/win-unpacked/resources/app.asar`），自动重新打包 asar
+
+### 5. 替换 asar（打包版才有）
+
+关闭 Hermes 后执行：
+
+```powershell
+cd apps\desktop\release\win-unpacked\resources
+Remove-Item app.asar
+Move-Item app.asar.new app.asar
+```
+
+### 6. 重启
+
+重新打开 Hermes 桌面端，头像效果即生效。
 
 ## 验证
 
@@ -104,3 +78,17 @@ npm run build
 - 鼠标划过消息行 → 名称标签淡入
 - 点击头像 → 弹出编辑弹窗
 - 弹窗中可修改名称、上传图片
+- 点击 ✕ 关闭弹窗
+
+## 效果预览
+
+| 功能 | 表现 |
+|---|---|
+| 用户消息 | 右侧圆形头像 + 气泡左对齐带 max-width 限制 |
+| Agent 消息 | 左侧圆形头像 + 气泡右侧对齐 |
+| 首字母头像 | 默认 Y（用户）/ H（助手），自定义名称后更新 |
+| hover 名称 | 圆形头像旁淡入显示名称 |
+| 编辑弹窗 | 点击任意头像弹出，支持改名+上传图片 |
+| 数据存储 | localStorage，不上传、不联网 |
+| 图层防遮挡 | z-index: 50，不被 sticky 气泡盖住 |
+| 关闭弹窗 | 原生 ✕ 按钮直接关闭，Tooltip 不拦截事件 |
