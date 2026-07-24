@@ -323,31 +323,39 @@ def is_packaged(root: Path) -> bool:
 
 
 def repack_asar(root: Path) -> None:
-    """Extract the running asar, swap dist/, and pack a new .asar.new."""
+    """Pack a new .asar.new using @electron/asar (matching electron-builder's files config)."""
     desktop = root / "apps" / "desktop"
-    asar_dir = desktop / "release/win-unpacked/resources"
-    asar = asar_dir / "app.asar"
-    new_asar = asar_dir / "app.asar.new"
+    asar_new = desktop / "app.asar.new"
 
-    with tempfile.TemporaryDirectory(prefix="asar-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="hermes-asar-") as tmp:
         tmp_path = Path(tmp)
-        print("\n  📦 Repacking asar...")
+        print("\n  📦 Packing asar...")
+
+        # Copy exactly what electron-builder's "files" config includes
+        for name in ["dist", "assets", "public"]:
+            src = desktop / name
+            if src.exists():
+                shutil.copytree(src, tmp_path / name)
+        shutil.copy2(desktop / "package.json", tmp_path / "package.json")
+
+        # Pack with @electron/asar (correct way — dist/ stays as top-level dir)
         subprocess.run(
-            ["npx", "asar", "extract", str(asar), str(tmp_path)],
-            cwd=desktop, check=True, capture_output=True
+            ["npx", "--yes", "@electron/asar", "pack", str(tmp_path), str(asar_new)],
+            cwd=tmp_path, check=True, capture_output=True
         )
 
-        # Replace dist/ with freshly built one
-        shutil.rmtree(tmp_path / "dist", ignore_errors=True)
-        shutil.copytree(desktop / "dist", tmp_path / "dist")
-
-        subprocess.run(
-            ["npx", "asar", "pack", str(tmp_path), str(new_asar)],
-            cwd=desktop, check=True, capture_output=True
+        # Verify structure
+        result = subprocess.run(
+            ["npx", "--yes", "@electron/asar", "list", str(asar_new)],
+            capture_output=True, text=True
         )
+        top = result.stdout.strip().split("\n")[:3]
+        if not any("dist" in line for line in top):
+            print("  ❌ asar missing dist/ directory — packing failed")
+            sys.exit(1)
 
-    mb = new_asar.stat().st_size / 1_000_000
-    print(f"  ✅ New asar: {mb:.1f} MB — {new_asar}")
+    mb = asar_new.stat().st_size / (1024 * 1024)
+    print(f"  ✅ app.asar.new ({mb:.1f}MB) — {asar_new}")
 
 
 # ---------------------------------------------------------------------------
@@ -428,11 +436,41 @@ def apply() -> None:
     # ── Step 4: Repack asar (packaged builds only) ──────────────────────
     if is_packaged(root):
         repack_asar(root)
-        print("\n🎉  Done! Close Hermes, then in PowerShell run:\n"
-              "      cd apps\\desktop\\release\\win-unpacked\\resources\n"
-              "      Remove-Item app.asar\n"
-              "      Move-Item app.asar.new app.asar\n"
-              "   Then restart Hermes to see avatars.")
+        asar_new = desktop_dir / "app.asar.new"
+        asar_dir_rel = "release\\win-unpacked\
+esources"
+        print("\n" + "=" * 60)
+        print("  ✅ 安装完成！请执行以下命令替换 asar：")
+        print("=" * 60)
+        print(f"""
+在 PowerShell 中执行：
+
+```powershell
+# 关闭 Hermes
+Get-Process | Where-Object {{$_.Name -like '*ermes*'}} | Stop-Process -Force
+
+# 替换 asar
+cd "{root}\\apps\\desktop\\{asar_dir_rel}"
+Remove-Item app.asar -ErrorAction SilentlyContinue
+Move-Item "{asar_new}" "app.asar"
+
+# 验证
+$asar = Get-Item app.asar
+Write-Host "asar: $([math]::Round($asar.Length/1MB,1))MB, $($asar.LastWriteTime)"
+
+# 清缓存
+Remove-Item -Recurse -Force "$env:APPDATA\\Hermes\\Cache" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "$env:APPDATA\\Hermes\\GPUCache" -ErrorAction SilentlyContinue
+
+# 重启 Hermes
+Start-Process "Hermes.lnk"
+```
+
+重启后验证：
+- 对话界面显示圆形头像（默认首字母）
+- 鼠标划过消息行 → 名称标签淡入
+- 点击头像 → 弹出编辑弹窗
+""")
     else:
         print("\n🎉  Done! Restart Hermes desktop to see the avatars.")
 
