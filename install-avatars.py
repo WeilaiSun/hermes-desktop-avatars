@@ -43,6 +43,7 @@ PATCH_FILES = [
     "assistant-message.patch",
     "index.patch",
     "styles.patch",
+    "i18n.patch",
 ]
 
 # ---------------------------------------------------------------------------

@@ -42,15 +42,15 @@ python path/to/install-avatars.py
 
 ### 3. 修改现有文件
 
-对 5 个文件做精确替换：
+通过 git apply 应用 5 个补丁（自动跳过已安装状态）：
 
-| 文件 | 改动 |
-|---|---|
-| `user-message.tsx` | 导入 MessageAvatar + avatar store → 包裹返回值为 avatar 行 |
-| `assistant-message.tsx` | 同上，头像在左 |
-| `thread/index.tsx` | 渲染 AvatarEditorDialog |
-| `styles.css` | 追加 avatar CSS（含 z-index: 50 防遮挡） |
-| `avatar-editor-dialog.tsx` | 替换 ✕ 关闭逻辑（原生 button 直接回调） |
+| 补丁 | 文件 | 改动 |
+|---|---|---|
+| `user-message.patch` | `user-message.tsx` | 导入 MessageAvatar + avatar store → 包裹返回值为 avatar 行 |
+| `assistant-message.patch` | `assistant-message.tsx` | 同上，头像在左（useStore 改名 useNanostore 避冲突） |
+| `index.patch` | `thread/index.tsx` | 渲染 AvatarEditorDialog |
+| `styles.patch` | `styles.css` | 追加 avatar CSS（含 z-index: 50 防遮挡） |
+| `i18n.patch` | `i18n/en|ja|zh|zh-hant|types.ts` | 5 语言 avatarEditor 弹窗文案 |
 
 ### 4. 重建 + 打包
 

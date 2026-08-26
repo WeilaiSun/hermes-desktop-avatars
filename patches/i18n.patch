@@ -1,0 +1,95 @@
+diff --git a/apps/desktop/src/i18n/en.ts b/apps/desktop/src/i18n/en.ts
+index 66fcc36c9..13b20a473 100644
+--- a/apps/desktop/src/i18n/en.ts
++++ b/apps/desktop/src/i18n/en.ts
+@@ -3237,6 +3237,14 @@ export const en: Translations = {
+     }
+   },
+ 
++  avatarEditor: {
++    title: 'Edit chat avatars',
++    description: 'Customise the display name and avatar for each participant.',
++    youLabel: 'You (user)',
++    hermesLabel: 'Hermes (assistant)',
++    placeholder: 'Enter name'
++  },
++
+   prompts: {
+     gatewayDisconnected: 'Hermes gateway is not connected',
+     sudoSendFailed: 'Could not send sudo password',
+diff --git a/apps/desktop/src/i18n/ja.ts b/apps/desktop/src/i18n/ja.ts
+index 64ea8ed2f..9992805c8 100644
+--- a/apps/desktop/src/i18n/ja.ts
++++ b/apps/desktop/src/i18n/ja.ts
+@@ -2885,6 +2885,14 @@ export const ja = defineLocale({
+     }
+   },
+ 
++  avatarEditor: {
++    title: 'アバターを編集',
++    description: '各参加者の表示名とアバターをカスタマイズします。',
++    youLabel: 'あなた（ユーザー）',
++    hermesLabel: 'Hermes（アシスタント）',
++    placeholder: '名前を入力'
++  },
++
+   prompts: {
+     gatewayDisconnected: 'Hermes ゲートウェイが接続されていません',
+     sudoSendFailed: 'sudo パスワードを送信できませんでした',
+diff --git a/apps/desktop/src/i18n/types.ts b/apps/desktop/src/i18n/types.ts
+index 2bdbcf093..00496fb50 100644
+--- a/apps/desktop/src/i18n/types.ts
++++ b/apps/desktop/src/i18n/types.ts
+@@ -2770,6 +2770,14 @@ export interface Translations {
+     }
+   }
+ 
++  avatarEditor: {
++    title: string
++    description: string
++    youLabel: string
++    hermesLabel: string
++    placeholder: string
++  }
++
+   prompts: {
+     gatewayDisconnected: string
+     sudoSendFailed: string
+diff --git a/apps/desktop/src/i18n/zh-hant.ts b/apps/desktop/src/i18n/zh-hant.ts
+index a3930085d..275011441 100644
+--- a/apps/desktop/src/i18n/zh-hant.ts
++++ b/apps/desktop/src/i18n/zh-hant.ts
+@@ -2767,6 +2767,14 @@ export const zhHant = defineLocale({
+     }
+   },
+ 
++  avatarEditor: {
++    title: '編輯頭像',
++    description: '自訂雙方在對話中的顯示名稱與頭像。',
++    youLabel: '你（用戶）',
++    hermesLabel: 'Hermes（助手）',
++    placeholder: '輸入名稱'
++  },
++
+   prompts: {
+     gatewayDisconnected: 'Hermes 閘道未連線',
+     sudoSendFailed: '無法傳送 sudo 密碼',
+diff --git a/apps/desktop/src/i18n/zh.ts b/apps/desktop/src/i18n/zh.ts
+index 0fa9e21e2..610df3d97 100644
+--- a/apps/desktop/src/i18n/zh.ts
++++ b/apps/desktop/src/i18n/zh.ts
+@@ -3388,6 +3388,14 @@ export const zh: Translations = {
+     }
+   },
+ 
++  avatarEditor: {
++    title: '编辑头像',
++    description: '自定义双方在对话中的显示名称与头像。',
++    youLabel: '你（用户）',
++    hermesLabel: 'Hermes（助手）',
++    placeholder: '输入名称'
++  },
++
+   prompts: {
+     gatewayDisconnected: 'Hermes 网关未连接',
+     sudoSendFailed: '无法发送 sudo 密码',
